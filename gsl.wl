@@ -4,6 +4,7 @@
 (*gsl*)
 
 
+(* ::Code::Initialization:: *)
 (* Wolfram Language Package *)
 
 (* Created by Alexander Pickston, adapted from code originally written by Massimiliano Proietti *)
@@ -11,48 +12,11 @@
 (* alexpickston@gmail.com *)
 
 
-BeginPackage["gsl`"]
+(* ::Subsubsection:: *)
+(*Package dependencies*)
 
 
-CustomGraph::usage="CustomGraph[edges_]
-From a list of edges, create a graph using. To make a graph equivalent to a GHZ state, then edges={{1,2},{2,3}}";
-
-
-LCQubit::usage="LCQubit[graph_,vertex_]
-Performing the local complementation operation (LC) onto a selected qubit of a graph state";
-
-
-LCOrbit::usage="LCOrbit[graph_]
-Return the orbit from a given graph without any isometric rquivalents in the output";
-
-
-Zmeasurement::usage="Zmeasurement[graph_,vertex_]
-Performs a Z measurement onto the vertex of a graph";
-Ymeasurement::usage="Ymeasurement[graph_,vertex_]
-Performs a Y measurement onto the vertex of a graph";
-Xmeasurement::usage="Xmeasurement[graph_,vertex_]
-Performs a X measurement onto the vertex of a graph, recall that this does the operation of a Y measurement on a randomly selected neighbour of the chosen vertex";
-
-
-FindStabilzers::usage="FindStabilizers[state_]
-For a given state, return the stabilzers of the state. This works by finding which combination of operators \"stabilize\" the state. The state after applying the operation is equivalent to the state before applying the operation";
-
-
-FindGraph::usage="FindGraph[stabilizers_]
-From a list of stabilizers, return combinations of stabilizer generators with a specific pattern: only those combinations that contain one Pauli X operator per node in the graph state.";
-
-
-DrawGraph::usage="FindGraph[stabilizers_]
-From the results of FindGraph[] (a list of stabilizers), construct a graph based on the relationships between qubits specified by the input stabilizers";
-
-
-Begin["`Private`"]
-
-
-(* ::Subsection::Closed:: *)
-(*Dependencies*)
-
-
+(* ::Code::Initialization:: *)
 (* graph styling *)
 graphstyle = {
    	VertexSize -> {0.4},
@@ -132,10 +96,53 @@ SwapParts[expr_, pos1_, pos2_] :=
     ];
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
+(*Begin package*)
+
+
+(* ::Code::Initialization:: *)
+BeginPackage["gsl`"]
+
+
+(* ::Code::Initialization:: *)
+CustomGraph::usage="CustomGraph[edges_] From a list of edges, create a graph using. To make a graph equivalent to a GHZ state, then edges={{1,2},{2,3}}";
+
+
+(* ::Code::Initialization:: *)
+LCQubit::usage="LCQubit[graph_,vertex_] Performing the local complementation operation (LC) onto a selected qubit of a graph state";
+
+
+(* ::Code::Initialization:: *)
+LCOrbit::usage="LCOrbit[graph_] Return the orbit from a given graph without any isometric rquivalents in the output";
+
+
+(* ::Code::Initialization:: *)
+Zmeasurement::usage="Zmeasurement[graph_,vertex_] Performs a Z measurement onto the vertex of a graph";
+Ymeasurement::usage="Ymeasurement[graph_,vertex_] Performs a Y measurement onto the vertex of a graph";
+Xmeasurement::usage="Xmeasurement[graph_,vertex_] Performs a X measurement onto the vertex of a graph, recall that this does the operation of a Y measurement on a randomly selected neighbour of the chosen vertex";
+
+
+(* ::Code::Initialization:: *)
+FindStabilzers::usage="FindStabilizers[state_] For a given state, return the stabilzers of the state. This works by finding which combination of operators \"stabilize\" the state. The state after applying the operation is equivalent to the state before applying the operation";
+
+
+(* ::Code::Initialization:: *)
+FindGraph::usage="FindGraph[stabilizers_] From a list of stabilizers, return combinations of stabilizer generators with a specific pattern: only those combinations that contain one Pauli X operator per node in the graph state.";
+
+
+(* ::Code::Initialization:: *)
+DrawGraph::usage="FindGraph[stabilizers_] From the results of FindGraph[] (a list of stabilizers), construct a graph based on the relationships between qubits specified by the input stabilizers";
+
+
+(* ::Code::Initialization:: *)
+Begin["`Private`"]
+
+
+(* ::Subsection:: *)
 (*Defined functions*)
 
 
+(* ::Code::Initialization:: *)
 Module[{input, out},
     CustomGraph[edges_] := (
     
@@ -151,6 +158,7 @@ Module[{input, out},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{subGraph,diffGraph,complementGraph,out,g,vertexCoordinates},
 	LCQubit[graph_,vertex_]:=(
 
@@ -178,6 +186,7 @@ Module[{subGraph,diffGraph,complementGraph,out,g,vertexCoordinates},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{perm,prmList,noDuplicates,g,vertexCoordinates,out},
 	LCOrbit[graph_]:=(
 
@@ -200,6 +209,7 @@ Module[{perm,prmList,noDuplicates,g,vertexCoordinates,out},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{vertexCoordinates,g,perm,prmList,noDuplicates,out},
 	LCOrbitIsomorphic[graph_]:=(
 
@@ -222,6 +232,7 @@ Module[{vertexCoordinates,g,perm,prmList,noDuplicates,out},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{vertexCoordinates,g,edgeDelete,edgeDeleteGraph,vertexList,vertexDeleted,ordering,out},
 	Zmeasurement[graph_,vertex_]:=(
 
@@ -246,12 +257,14 @@ Module[{vertexCoordinates,g,edgeDelete,edgeDeleteGraph,vertexList,vertexDeleted,
 		vertexCoordinates=Delete[vertexCoordinates,vertex];
 
 		(* ensure styling is correct *)
-		out=Graph[edgeDelete,graphstyle,VertexCoordinates->vertexCoordinates];
+		(*out=Graph[edgeDelete,graphstyle,VertexCoordinates->vertexCoordinates];*)
+		out=Graph[edgeDelete,graphstyle];
 
 	Return[out];);
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{},
 	Ymeasurement[graph_,vertex_]:=(
 
@@ -260,6 +273,7 @@ Module[{},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{randomNeighbour,tempGraph,out},
 	Xmeasurement[graph_,vertex_]:=(
 
@@ -276,6 +290,7 @@ Module[{randomNeighbour,tempGraph,out},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 	FindStabilzers[state_] := (
 	
@@ -322,6 +337,7 @@ Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{dim,listStab,comb,cliffOp,combCliff,stabComb,graphGen,noSameNodeList,posStab,graphList},
 	FindGraph[state_]:=(
 
@@ -369,6 +385,7 @@ Module[{dim,listStab,comb,cliffOp,combCliff,stabComb,graphGen,noSameNodeList,pos
 ];
 
 
+(* ::Code::Initialization:: *)
 Module[{linkList,nodeList,toGraph,noDoubleLinks,out},
 	DrawGraph[stabList_]:=(
 
@@ -389,12 +406,15 @@ Module[{linkList,nodeList,toGraph,noDoubleLinks,out},
 ];
 
 
+(* ::Code::Initialization:: *)
 End[]
 
 
+(* ::Code::Initialization:: *)
 EndPackage[]
 
 
+(* ::Code::Initialization:: *)
 chars = Characters@"gsl library has been loaded successfully. Have fun!";
 list = Table[
    Style[chars[[i]], 
