@@ -4,7 +4,6 @@
 (*gsl*)
 
 
-(* ::Code::Initialization:: *)
 (* Wolfram Language Package *)
 
 (* Created by Alexander Pickston, adapted from code originally written by Massimiliano Proietti *)
@@ -12,140 +11,81 @@
 (* alexpickston@gmail.com *)
 
 
-(* ::Subsubsection:: *)
-(*Package dependencies*)
-
-
-(* ::Code::Initialization:: *)
-(* graph styling *)
-graphstyle = {
-   	VertexSize -> {0.4},
-   	VertexLabels -> {Placed["Name", {1/2*1.05, 1/2*1.05}]},
-   	ImageSize -> {146.99479166666538, Automatic},
-   	VertexStyle -> {Directive[EdgeForm[{Thick, Opacity[1],Blue}], Blue]},
-   	VertexLabelStyle -> Directive[White, FontFamily -> "IBM Plex Mono", 20],
-   	EdgeStyle -> Directive[Black, Thick, Opacity[1]],
-   	GraphLayout -> "CircularEmbedding"
-    };
-
-(* folded Kronecker product *)
-Kron := KroneckerProduct[##]&
-
-(* basis states *)
-h = {{1}, {0}};
-v = {{0}, {1}};
-d = 1/Sqrt[2] (h + v);
-a = 1/Sqrt[2] (h - v);
-r = 1/Sqrt[2] (h + I*v);
-l = 1/Sqrt[2] (h - I*v);
-
-(* Partial Trace - adapted from Mark S. Tame - http://library.wolfram.com/infocenter/MathSource/5571/ *)
-SwapParts[expr_, pos1_, pos2_] := 
-    
-    ReplacePart[#, #, {pos1, pos2}, {pos2, pos1}] &[expr];
-    TraceSystem[dm_, sys_] := 
-    Block[{Qubits, TrkM, n, M, k, Permut, perm, b, c, p},
-            Qubits = Reverse[Sort[sys]];(* 
-            rearrange the list of qubits to be traced out *)
-            TrkM = dm;
-
-   (* For all qubits to be traced out... *)
-    For[q = 1, q <= Dimensions[Qubits][[1]], q++,
-        n = Log[2, (Dimensions[TrkM][[1]])]; (* 
-        dimensions of original system *)
-        M = TrkM;
-        k = Qubits[[q]];
-    
-    If[k == n,(* if tracing the last system *)
-        TrkM = {};
-        For[p = 1, p < 2^n + 1, p = p + 2,
-            TrkM = 
-            Append[TrkM, 
-            Take[M[[p, All]], {1, 2^n, 2}] + 
-            Take[M[[p + 1, All]], {2, 2^n, 2}]];
-            (* Pick row p/p+1 and take elements 1/2 through 2^n in steps of 2 - sum thoese and append to zero matrix - do for all rows *)
-            ],
-
-        For[j = 0, j < (n - k), j++,(* if not - permute accordingly *) b = {0};
-        For[i = 1, i < 2^n + 1, i++,
-        If[(Mod[(IntegerDigits[i - 1, 2, n][[n]] + 
-            IntegerDigits[i - 1, 2, n][[n - j - 1]]), 2]) == 1 && 
-            Count[b, i]  == 0, 
-            Permut = {i, (FromDigits[
-                SwapParts[(IntegerDigits[i - 1, 2, n]), {n}, {n - j - 1}], 2] + 1)};
-                b = Append[b, (FromDigits[
-                SwapParts[(IntegerDigits[i - 1, 2, n]), {n}, {n - j - 1}], 2] + 1)];
-                c = Range[2^n];
-                perm = 
-                SwapParts[c, {i}, {(FromDigits[SwapParts[(IntegerDigits[i - 1, 2, n]), {n}, {n - j - 1}], 2] + 1)}];
-                M = M[[perm, perm]];]];
-        
-    (* and now trace out last system *)
-    TrkM = {};
-    For[p = 1, p < 2^n + 1, p = p + 2,
-    TrkM = Append[TrkM, 
-        Take[M[[p, All]], {1, 2^n, 2}] + 
-        Take[M[[p + 1, All]], {2, 2^n, 2}]];
-        ]
-        ]
-        ];
-    ];
-    
-    Clear[Qubits, n, M, k, Permut, perm, b, c]; 
-    TrkM
-    ];
-
-
 (* ::Subsection:: *)
 (*Begin package*)
 
 
-(* ::Code::Initialization:: *)
 BeginPackage["gsl`"]
 
 
-(* ::Code::Initialization:: *)
 CustomGraph::usage="CustomGraph[edges_] From a list of edges, create a graph using. To make a graph equivalent to a GHZ state, then edges={{1,2},{2,3}}";
 
 
-(* ::Code::Initialization:: *)
 LCQubit::usage="LCQubit[graph_,vertex_] Performing the local complementation operation (LC) onto a selected qubit of a graph state";
 
 
-(* ::Code::Initialization:: *)
 LCOrbit::usage="LCOrbit[graph_] Return the orbit from a given graph without any isometric rquivalents in the output";
 
-
-(* ::Code::Initialization:: *)
 Zmeasurement::usage="Zmeasurement[graph_,vertex_] Performs a Z measurement onto the vertex of a graph";
+
 Ymeasurement::usage="Ymeasurement[graph_,vertex_] Performs a Y measurement onto the vertex of a graph";
+
 Xmeasurement::usage="Xmeasurement[graph_,vertex_] Performs a X measurement onto the vertex of a graph, recall that this does the operation of a Y measurement on a randomly selected neighbour of the chosen vertex";
 
-
-(* ::Code::Initialization:: *)
 FindStabilzers::usage="FindStabilizers[state_] For a given state, return the stabilzers of the state. This works by finding which combination of operators \"stabilize\" the state. The state after applying the operation is equivalent to the state before applying the operation";
 
-
-(* ::Code::Initialization:: *)
 FindGraph::usage="FindGraph[stabilizers_] From a list of stabilizers, return combinations of stabilizer generators with a specific pattern: only those combinations that contain one Pauli X operator per node in the graph state.";
 
 
-(* ::Code::Initialization:: *)
 DrawGraph::usage="FindGraph[stabilizers_] From the results of FindGraph[] (a list of stabilizers), construct a graph based on the relationships between qubits specified by the input stabilizers";
 
 
-(* ::Code::Initialization:: *)
+packageDirectory=DirectoryName[$InputFileName];
+
+TutorialNotebook[] :=
+    SetOptions[
+      NotebookOpen@FileNameJoin[{packageDirectory, "gsl - tutorial.nb"}],
+      Saveable -> False
+    ]
+    
+Print[
+"gsl is a package (mainly) for visualising operations on graph states. 
+A list of the functions in the library is shown below. 
+More details on how to use the library can be found in the tutorial notebook by calling the function: TutorialNotebook[]."
+]
+Print["A list of of the functions can be found by calling the command: ?ParametricDownConversion`*"]
+
+
 Begin["`Private`"]
+
+
+(* graph styling *)
+graphstyle={
+   VertexSize -> {0.4},
+   VertexLabels -> {Placed["Name", {1/2*1.05, 1/2*1.05}]},
+   ImageSize -> {147, Automatic},
+   VertexStyle -> {Directive[EdgeForm[{Thick, Opacity[1],Blue}], Blue]},
+   VertexLabelStyle -> Directive[White, FontFamily -> "IBM Plex Mono", 20],
+   EdgeStyle -> Directive[Black, Thick, Opacity[1]],
+   GraphLayout -> "CircularEmbedding"
+   };
+
+
+(* folded Kronecker product *)
+Kron := KroneckerProduct[##]&
+
+
+(* base vectors *)
+h={{1},{0}};v={{0},{1}};d=1/Sqrt[2](h+v);a=1/Sqrt[2](h-v);r=1/Sqrt[2](h+I v);l=1/Sqrt[2](h-I v);
 
 
 (* ::Subsection:: *)
 (*Defined functions*)
 
 
-(* ::Code::Initialization:: *)
-Module[{input, out},
-    CustomGraph[edges_] := (
-    
+CustomGraph[edges_] := 
+    Module[{input, out},
+        
         (* edges should be a string*)
         (* should be of the form: 
         edges={{1,2},{2,3}} *)
@@ -154,19 +94,18 @@ Module[{input, out},
           , {i, Length@edges}];
 
         out = Graph[input, graphstyle];
-    Return[out])
+    Return[out]
 ];
 
 
-(* ::Code::Initialization:: *)
-Module[{subGraph,diffGraph,complementGraph,out,g,vertexCoordinates},
+Module[{subGraph,diffGraph,complementGraph,out,\[FormalG],vertexCoordinates},
 	LCQubit[graph_,vertex_]:=(
 
 		(* get the vertex coordinates of the original graph *)
 		vertexCoordinates=GraphEmbedding[graph];
 
 		(* apply the vertex coordinates to the original graph *)
-		g=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
+		\[FormalG]=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
 
 		(* select the subgraph generated by the vertex and its neighbours *)
 		subGraph=Subgraph[graph,AdjacencyList[graph,vertex]];
@@ -186,15 +125,14 @@ Module[{subGraph,diffGraph,complementGraph,out,g,vertexCoordinates},
 ];
 
 
-(* ::Code::Initialization:: *)
-Module[{perm,prmList,noDuplicates,g,vertexCoordinates,out},
+Module[{perm,prmList,noDuplicates,\[FormalG],vertexCoordinates,out},
 	LCOrbit[graph_]:=(
 
 		(* get the vertex coordinates of the original graph *)
 		vertexCoordinates=GraphEmbedding[graph];
 
 		(* apply the vertex coordinates to the original graph *)
-		g=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
+		\[FormalG]=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
 
 		(* module operations *)
 		perm=Permutations[Range[VertexCount[graph]],VertexCount[graph]];
@@ -209,15 +147,14 @@ Module[{perm,prmList,noDuplicates,g,vertexCoordinates,out},
 ];
 
 
-(* ::Code::Initialization:: *)
-Module[{vertexCoordinates,g,perm,prmList,noDuplicates,out},
+Module[{vertexCoordinates,\[FormalG],perm,prmList,noDuplicates,out},
 	LCOrbitIsomorphic[graph_]:=(
 
 		(* get the vertex coordinates of the original graph *)
 		vertexCoordinates=GraphEmbedding[graph];
 
 		(* apply the vertex coordinates to the original graph *)
-		g=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
+		\[FormalG]=Graph[VertexList[graph],EdgeList[graph],VertexCoordinates->vertexCoordinates];
 
 		(* module operations *)
 		perm=Permutations[Range[VertexCount[graph]],VertexCount[graph]];
@@ -232,19 +169,18 @@ Module[{vertexCoordinates,g,perm,prmList,noDuplicates,out},
 ];
 
 
-(* ::Code::Initialization:: *)
-Module[{vertexCoordinates,g,edgeDelete,edgeDeleteGraph,vertexList,vertexDeleted,ordering,out},
+Module[{vertexCoordinates,\[FormalG],edgeDelete,edgeDeleteGraph,vertexList,vertexDeleted,ordering,out},
 	Zmeasurement[graph_,vertex_]:=(
 
 		(* get the vertex coordinates of the original graph *)
 		vertexCoordinates=GraphEmbedding[graph];
 
 		(* apply the vertex coordinates to the original graph *)
-		g=Graph[VertexList[graph],EdgeList[graph],graphstyle,VertexCoordinates->vertexCoordinates];
+		\[FormalG]=Graph[VertexList[graph],EdgeList[graph],graphstyle,VertexCoordinates->vertexCoordinates];
 
 		(* module operation *)
 		(* finding the complement between all edges and those edges which join to the vertex specified in the function *)
-		edgeDelete=Complement[EdgeList[g],EdgeList[g,vertex\[UndirectedEdge]_]];
+		edgeDelete=Complement[EdgeList[\[FormalG]],EdgeList[\[FormalG],vertex\[UndirectedEdge]_]];
 		edgeDeleteGraph=Graph[edgeDelete];
 		vertexList=VertexList[edgeDeleteGraph];
 
@@ -264,7 +200,6 @@ Module[{vertexCoordinates,g,edgeDelete,edgeDeleteGraph,vertexList,vertexDeleted,
 ];
 
 
-(* ::Code::Initialization:: *)
 Module[{},
 	Ymeasurement[graph_,vertex_]:=(
 
@@ -273,7 +208,6 @@ Module[{},
 ];
 
 
-(* ::Code::Initialization:: *)
 Module[{randomNeighbour,tempGraph,out},
 	Xmeasurement[graph_,vertex_]:=(
 
@@ -290,7 +224,6 @@ Module[{randomNeighbour,tempGraph,out},
 ];
 
 
-(* ::Code::Initialization:: *)
 Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 	FindStabilzers[state_] := (
 	
@@ -298,7 +231,7 @@ Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 		dim=1/Log[Length[state],2];
 
 		(* define a set of Pauli operators *)
-		ops=Tuples[Table[{\[DoubleStruckCapitalI][i],\[DoubleStruckCapitalX][i],\[DoubleStruckCapitalZ][i],-\[DoubleStruckCapitalZ][i]},{i,1,dim}]];
+		ops=Tuples[Table[{gsl`\[DoubleStruckCapitalI][i], gsl`\[DoubleStruckCapitalX][i], gsl`\[DoubleStruckCapitalZ][i], -gsl`\[DoubleStruckCapitalZ][i]},{i,1,dim}]];
 
 		(* List of rules for the application of the Pauli matrices to basis vectors *)
 		transformations={
@@ -318,7 +251,7 @@ Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 
 		(* flatten the list of Pauli operators *)
 		opsList=Flatten[#/.transformations]&/@ops;
-
+	
 		(* define a symbolic coding for the state using Kronecker product *)
 		coding=Kron@@Table[{H[i],V[i]},{i,1,dim}]//Flatten;
 
@@ -337,7 +270,6 @@ Module[{dim,ops,opsList,coding,codingState,allStates,pos,out,transformations},
 ];
 
 
-(* ::Code::Initialization:: *)
 Module[{dim,listStab,comb,cliffOp,combCliff,stabComb,graphGen,noSameNodeList,posStab,graphList},
 	FindGraph[state_]:=(
 
@@ -385,7 +317,6 @@ Module[{dim,listStab,comb,cliffOp,combCliff,stabComb,graphGen,noSameNodeList,pos
 ];
 
 
-(* ::Code::Initialization:: *)
 Module[{linkList,nodeList,toGraph,noDoubleLinks,out},
 	DrawGraph[stabList_]:=(
 
@@ -406,15 +337,12 @@ Module[{linkList,nodeList,toGraph,noDoubleLinks,out},
 ];
 
 
-(* ::Code::Initialization:: *)
 End[]
 
 
-(* ::Code::Initialization:: *)
 EndPackage[]
 
 
-(* ::Code::Initialization:: *)
 chars = Characters@"gsl library has been loaded successfully. Have fun!";
 list = Table[
    Style[chars[[i]], 
